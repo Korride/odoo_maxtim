@@ -16,15 +16,16 @@ class SaleOrderInherit(models.Model):
     new_field_total = fields.Char(string='New Field', default = _random_letters, copy=False)
 
 
-    @api.onchange('date_order', 'order_line', 'fiscal_position_id')
+    @api.onchange('date_order', 'order_line')
     def _onchange_date_price_update(self):
 
-            if self.date_order:
-                now = datetime.datetime.now()
-                if self.date_order.strftime('%d.%m.%Y%H:%M:%S') != now.strftime('%d.%m.%Y%H:%M:%S'):
-                    date_str = self.date_order.strftime('%d.%m.%Y %H:%M:%S')
-                    amount = self.amount_total or 0.0
-                    self.new_field_total = f"{date_str} + {amount:.2f}"
+        if self.date_order:
+            now = datetime.datetime.now()
+            # Костыль для предотвращения триггера onchange при создании ордера и сохранения набора букв
+            if self.date_order.strftime('%d.%m.%Y%H:%M:%S') != now.strftime('%d.%m.%Y%H:%M:%S'):
+                date_str = self.date_order.strftime('%d.%m.%Y %H:%M:%S')
+                amount = self.amount_total or 0.0
+                self.new_field_total = f"{date_str} + {amount:.2f}"
 
     @api.onchange('new_field_total')
     def _onchange_field_len(self):
@@ -32,19 +33,12 @@ class SaleOrderInherit(models.Model):
             return {
                 'warning':{
                 'title':"Превышена максимальная длина поля",
-                'mesage': f"Длина текста должна быть меньше 30 символов!",
+                'message': f"Длина текста должна быть меньше 30 символов!",
             },
             }
     @api.constrains('new_field_total')
     def _constrains_new_field(self):
-      if self.new_field_total and len(self.new_field_total) > 30:
-            for record in self:
-                if record.new_field_total and len(record.new_field_total) > 30:
-                    raise ValidationError(
-                        f"Длина текста должна быть меньше 30 символов!"
-                    )
-
-
-
-
-                #,  'fiscal_position_id'
+        if self.new_field_total and len(self.new_field_total) > 30:
+            raise ValidationError(
+                f"Длина текста должна быть меньше 30 символов!"
+            )

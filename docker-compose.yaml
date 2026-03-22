@@ -7,7 +7,7 @@ services:
       - "8069:8069"
     volumes:
       - odoo-web-data:/var/lib/odoo
-      - C:\Program Files\Docker\TESTPROJ\src\addons:/mnt/extra-addons
+      - ./src/addons:/mnt/extra-addons
     environment:
       - HOST=mydb
       - USER=odoo
